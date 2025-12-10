@@ -42,11 +42,13 @@ def get_credentials():
 def create_google_doc(title, content, folder_id="1HXjw0QBYCi8NBqOfhzazkzl-_ZyREWSr"):
     """
     Create a new Google Doc with the given title and content.
+    Documents are created in a shared folder since service accounts 
+    don't have their own Drive space.
     
     Args:
         title (str): Title of the document
         content (str): Content to add to the document
-        folder_id (str, optional): Google Drive folder ID to create the doc in
+        folder_id (str): Google Drive folder ID (REQUIRED for service accounts)
     
     Returns:
         dict: Dictionary containing document_id and document_url
@@ -55,28 +57,26 @@ def create_google_doc(title, content, folder_id="1HXjw0QBYCi8NBqOfhzazkzl-_ZyREW
         # Get credentials
         creds = get_credentials()
         
-        # Build the Docs API service
+        # Build the Drive and Docs API services
+        drive_service = build('drive', 'v3', credentials=creds)
         docs_service = build('docs', 'v1', credentials=creds)
         
-        # Create a new document
-        doc = docs_service.documents().create(body={'title': title}).execute()
-        document_id = doc.get('documentId')
+        # Create document metadata with parent folder
+        file_metadata = {
+            'name': title,
+            'mimeType': 'application/vnd.google-apps.document',
+            'parents': [folder_id]  # Create directly in the folder
+        }
         
-        # If folder_id is provided, move the document to that folder
-        if folder_id:
-            drive_service = build('drive', 'v3', credentials=creds)
-            # Move file to the specified folder
-            file = drive_service.files().get(fileId=document_id, fields='parents').execute()
-            previous_parents = ",".join(file.get('parents'))
-            
-            drive_service.files().update(
-                fileId=document_id,
-                addParents=folder_id,
-                removeParents=previous_parents,
-                fields='id, parents'
-            ).execute()
+        # Create the document using Drive API (in the specified folder)
+        file = drive_service.files().create(
+            body=file_metadata,
+            fields='id'
+        ).execute()
         
-        # Prepare requests to insert content
+        document_id = file.get('id')
+        
+        # Now add content using Docs API
         requests = [
             {
                 'insertText': {
@@ -165,6 +165,7 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
+
 
 
 
