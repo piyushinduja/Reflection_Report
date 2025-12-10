@@ -1,15 +1,14 @@
-"""
-Google Docs Integration Module
-Simple integration to create and write content to Google Docs
-"""
-
 import streamlit as st
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import os
 
-# Scopes required for Google Docs API
-SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/drive.file']
+# Scopes required for Google Docs and Drive API
+SCOPES = [
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/drive.file'
+]
 
 def get_credentials():
     """
@@ -39,6 +38,7 @@ def get_credentials():
         "Visit: https://console.cloud.google.com/apis/credentials"
     )
 
+
 def create_google_doc(title, content, folder_id="1HXjw0QBYCi8NBqOfhzazkzl-_ZyREWSr"):
     """
     Create a new Google Doc with the given title and content.
@@ -65,13 +65,14 @@ def create_google_doc(title, content, folder_id="1HXjw0QBYCi8NBqOfhzazkzl-_ZyREW
         file_metadata = {
             'name': title,
             'mimeType': 'application/vnd.google-apps.document',
-            'parents': [folder_id]  # Create directly in the folder
+            'parents': [folder_id]
         }
         
         # Create the document using Drive API (in the specified folder)
         file = drive_service.files().create(
             body=file_metadata,
-            fields='id'
+            fields='id',
+            supportsAllDrives=True
         ).execute()
         
         document_id = file.get('id')
@@ -113,7 +114,7 @@ def create_google_doc(title, content, folder_id="1HXjw0QBYCi8NBqOfhzazkzl-_ZyREW
             'success': False,
             'message': f'Error creating document: {str(e)}'
         }
-        
+
 
 def append_to_google_doc(document_id, content):
     """
@@ -165,8 +166,3 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
-
-
-
-
-
