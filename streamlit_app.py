@@ -7,7 +7,7 @@ import re
 import json
 import sys
 import pandas as pd
-import google.generativeai as genai
+from google import genai
 import io
 from ghl_integration import GoHighLevelClient, fetch_participants_from_ghl, test_ghl_connection
 from google_docs_integration import create_google_doc
@@ -555,4 +555,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
