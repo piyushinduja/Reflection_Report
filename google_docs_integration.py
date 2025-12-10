@@ -39,13 +39,14 @@ def get_credentials():
         "Visit: https://console.cloud.google.com/apis/credentials"
     )
 
-def create_google_doc(title, content):
+def create_google_doc(title, content, folder_id=None):
     """
     Create a new Google Doc with the given title and content.
     
     Args:
         title (str): Title of the document
         content (str): Content to add to the document
+        folder_id (str, optional): Google Drive folder ID to create the doc in
     
     Returns:
         dict: Dictionary containing document_id and document_url
@@ -55,11 +56,25 @@ def create_google_doc(title, content):
         creds = get_credentials()
         
         # Build the Docs API service
-        service = build('docs', 'v1', credentials=creds)
+        docs_service = build('docs', 'v1', credentials=creds)
         
         # Create a new document
-        doc = service.documents().create(body={'title': title}).execute()
+        doc = docs_service.documents().create(body={'title': title}).execute()
         document_id = doc.get('documentId')
+        
+        # If folder_id is provided, move the document to that folder
+        if folder_id:
+            drive_service = build('drive', 'v3', credentials=creds)
+            # Move file to the specified folder
+            file = drive_service.files().get(fileId=document_id, fields='parents').execute()
+            previous_parents = ",".join(file.get('parents'))
+            
+            drive_service.files().update(
+                fileId=document_id,
+                addParents=folder_id,
+                removeParents=previous_parents,
+                fields='id, parents'
+            ).execute()
         
         # Prepare requests to insert content
         requests = [
@@ -74,7 +89,7 @@ def create_google_doc(title, content):
         ]
         
         # Execute the batch update
-        service.documents().batchUpdate(
+        docs_service.documents().batchUpdate(
             documentId=document_id,
             body={'requests': requests}
         ).execute()
@@ -98,6 +113,7 @@ def create_google_doc(title, content):
             'success': False,
             'message': f'Error creating document: {str(e)}'
         }
+        
 
 def append_to_google_doc(document_id, content):
     """
@@ -149,3 +165,4 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
+
