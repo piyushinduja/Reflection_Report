@@ -39,7 +39,7 @@ def get_credentials():
     )
 
 
-def create_google_doc(title, content, folder_id="1HXjw0QBYCi8NBqOfhzazkzl-_ZyREWSr"):
+def create_google_doc(title, content, folder_id="0AIKRNYJ7JQZnUk9PVA"):
     """
     Create a new Google Doc with the given title and content.
     Documents are created in a shared folder since service accounts 
@@ -166,3 +166,4 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
+
