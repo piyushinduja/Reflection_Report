@@ -39,7 +39,7 @@ def get_credentials():
         "Visit: https://console.cloud.google.com/apis/credentials"
     )
 
-def create_google_doc(title, content, folder_id=None):
+def create_google_doc(title, content, folder_id="https://drive.google.com/drive/folders/1HXjw0QBYCi8NBqOfhzazkzl-_ZyREWSr"):
     """
     Create a new Google Doc with the given title and content.
     
@@ -165,4 +165,5 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
+
 
