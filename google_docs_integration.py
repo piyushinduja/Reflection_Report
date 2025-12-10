@@ -3,48 +3,41 @@ Google Docs Integration Module
 Simple integration to create and write content to Google Docs
 """
 
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+import streamlit as st
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import os
-import pickle
 
 # Scopes required for Google Docs API
-SCOPES = ['https://www.googleapis.com/auth/documents']
+SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive']
 
 def get_credentials():
     """
     Authenticate and get credentials for Google Docs API.
-    Saves credentials to token.pickle for future use.
+    Uses Streamlit secrets for deployment or local credentials.json for development.
     """
-    creds = None
+    # Try Streamlit secrets first (for deployment)
+    if "google_credentials" in st.secrets:
+        creds = service_account.Credentials.from_service_account_info(
+            st.secrets["google_credentials"],
+            scopes=SCOPES
+        )
+        return creds
     
-    # Check if token.pickle exists (saved credentials)
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
+    # Fall back to local service account file (for local development)
+    if os.path.exists('credentials.json'):
+        creds = service_account.Credentials.from_service_account_file(
+            'credentials.json',
+            scopes=SCOPES
+        )
+        return creds
     
-    # If credentials don't exist or are invalid, authenticate
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            # You need to download credentials.json from Google Cloud Console
-            if not os.path.exists('credentials.json'):
-                raise FileNotFoundError(
-                    "credentials.json not found. Please download it from Google Cloud Console.\n"
-                    "Visit: https://console.cloud.google.com/apis/credentials"
-                )
-            
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        
-        # Save credentials for future use
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-    
-    return creds
+    # If neither exists, raise error
+    raise FileNotFoundError(
+        "credentials.json not found and no Streamlit secrets configured. "
+        "Please add google_credentials to Streamlit secrets or download credentials.json from Google Cloud Console.\n"
+        "Visit: https://console.cloud.google.com/apis/credentials"
+    )
 
 def create_google_doc(title, content):
     """
@@ -156,4 +149,3 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
-        
