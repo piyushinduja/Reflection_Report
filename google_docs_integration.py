@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 import os
 
 # Scopes required for Google Docs API
-SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/documents', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/drive.file']
 
 def get_credentials():
     """
@@ -165,6 +165,7 @@ def append_to_google_doc(document_id, content):
             'success': False,
             'message': f'Error appending to document: {str(e)}'
         }
+
 
 
 
